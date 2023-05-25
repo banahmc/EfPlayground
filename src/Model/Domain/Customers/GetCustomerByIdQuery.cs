@@ -1,12 +1,14 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
+using Model.Common.Results;
 using Model.Persistence;
+using OneOf;
 
 namespace Model.Domain.Customers;
 
-public sealed record GetCustomerByIdQuery(int Id) : IRequest<CustomerDTO?>;
+public sealed record GetCustomerByIdQuery(int Id) : IRequest<OneOf<CustomerDTO, NotFound>>;
 
-public sealed class GetCustomerByIdQueryHandler : IRequestHandler<GetCustomerByIdQuery, CustomerDTO?>
+public sealed class GetCustomerByIdQueryHandler : IRequestHandler<GetCustomerByIdQuery, OneOf<CustomerDTO, NotFound>>
 {
     private readonly ApplicationDbContext _dbContext;
 
@@ -15,7 +17,7 @@ public sealed class GetCustomerByIdQueryHandler : IRequestHandler<GetCustomerByI
         _dbContext = dbContext;
     }
 
-    public async ValueTask<CustomerDTO?> Handle(GetCustomerByIdQuery request, CancellationToken cancellationToken)
+    public async ValueTask<OneOf<CustomerDTO, NotFound>> Handle(GetCustomerByIdQuery request, CancellationToken cancellationToken)
     {
         var customer = await _dbContext.Customers
             .AsNoTracking()
@@ -23,7 +25,7 @@ public sealed class GetCustomerByIdQueryHandler : IRequestHandler<GetCustomerByI
 
         if (customer is null)
         {
-            return null;
+            return new NotFound();
         }
 
         return new CustomerDTO(

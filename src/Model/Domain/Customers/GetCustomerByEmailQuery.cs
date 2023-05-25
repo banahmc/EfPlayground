@@ -1,12 +1,14 @@
 using Mediator;
 using Microsoft.EntityFrameworkCore;
+using Model.Common.Results;
 using Model.Persistence;
+using OneOf;
 
 namespace Model.Domain.Customers;
 
-public sealed record GetCustomerByEmailQuery(string Email) : IRequest<CustomerDTO?>;
+public sealed record GetCustomerByEmailQuery(string Email) : IRequest<OneOf<CustomerDTO, NotFound>>;
 
-public sealed class GetCustomerByEmailQueryHandler : IRequestHandler<GetCustomerByEmailQuery, CustomerDTO?>
+public sealed class GetCustomerByEmailQueryHandler : IRequestHandler<GetCustomerByEmailQuery, OneOf<CustomerDTO, NotFound>>
 {
     private readonly ApplicationDbContext _dbContext;
 
@@ -15,15 +17,15 @@ public sealed class GetCustomerByEmailQueryHandler : IRequestHandler<GetCustomer
         _dbContext = dbContext;
     }
 
-    public async ValueTask<CustomerDTO?> Handle(GetCustomerByEmailQuery request, CancellationToken cancellationToken)
+    public async ValueTask<OneOf<CustomerDTO, NotFound>> Handle(GetCustomerByEmailQuery request, CancellationToken cancellationToken)
     {
         var customer = await _dbContext.Customers
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase), cancellationToken);
+            .FirstOrDefaultAsync(c => c.Email == request.Email.ToLower().Trim(), cancellationToken);
 
         if (customer is null)
         {
-            return null;
+            return new NotFound();
         }
 
         return new CustomerDTO(

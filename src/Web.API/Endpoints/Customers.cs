@@ -24,19 +24,23 @@ public class Customers : CarterModule
 
         app.MapGet("/{customerId:int}", async (int customerId, HttpContext ctx, ISender sender) =>
         {
-            var data = await sender.Send(new GetCustomerByIdQuery(customerId), ctx.RequestAborted);
-            return Results.Ok(data);
+            var result = await sender.Send(new GetCustomerByIdQuery(customerId), ctx.RequestAborted);
+            return result.Match(
+                customer => Results.Ok(customer),
+                _ => Results.NotFound(WellKnownProblemDetails.NotFound(ctx)));
         }).WithName("GetCustomerById")
         .Produces<CustomerDTO>((int)HttpStatusCode.OK)
-        .Produces((int)HttpStatusCode.NotFound);
+        .Produces<ProblemDetails>((int)HttpStatusCode.NotFound);
 
         app.MapGet("/{customerEmail}", async (string customerEmail, HttpContext ctx, ISender sender) =>
         {
-            var data = await sender.Send(new GetCustomerByEmailQuery(customerEmail), ctx.RequestAborted);
-            return Results.Ok(data);
+            var result = await sender.Send(new GetCustomerByEmailQuery(customerEmail), ctx.RequestAborted);
+            return result.Match(
+                customer => Results.Ok(customer),
+                _ => Results.NotFound(WellKnownProblemDetails.NotFound(ctx)));
         }).WithName("GetCustomerByEmail")
         .Produces<CustomerDTO>((int)HttpStatusCode.OK)
-        .Produces((int)HttpStatusCode.NotFound);
+        .Produces<ProblemDetails>((int)HttpStatusCode.NotFound);
 
         app.MapPost("/", async (CreateCustomerCommand command, HttpContext ctx, ISender sender) =>
         {
@@ -44,6 +48,6 @@ public class Customers : CarterModule
             return Results.CreatedAtRoute("GetCustomerById", new { customerId = customer.Id }, customer);
         }).WithName("CreateCustomer")
         .Produces<CustomerDTO>((int)HttpStatusCode.OK)
-        .Produces<ProblemDetails>((int)HttpStatusCode.BadRequest);
+        .Produces<ValidationProblemDetails>((int)HttpStatusCode.BadRequest);
     }
 }
