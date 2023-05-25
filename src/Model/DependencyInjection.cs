@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,9 @@ public static class DependencyInjection
         services.AddMediator(options =>
         {
             options.Namespace = "Mediator.SG";
-            options.ServiceLifetime = ServiceLifetime.Transient;
+            options.ServiceLifetime = ServiceLifetime.Scoped;
         });
+
+        services.AddValidatorsFromAssemblyContaining<ApplicationDbContext>();
     }
 }

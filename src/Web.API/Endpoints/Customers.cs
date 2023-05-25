@@ -44,8 +44,10 @@ public class Customers : CarterModule
 
         app.MapPost("/", async (CreateCustomerCommand command, HttpContext ctx, ISender sender) =>
         {
-            var customer = await sender.Send(command, ctx.RequestAborted);
-            return Results.CreatedAtRoute("GetCustomerById", new { customerId = customer.Id }, customer);
+            var result = await sender.Send(command, ctx.RequestAborted);
+            return result.Match(
+                customer => Results.CreatedAtRoute("GetCustomerById", new { customerId = customer.Id }, customer),
+                validationFailed => Results.BadRequest(new ValidationProblemDetails(validationFailed.Errors)));
         }).WithName("CreateCustomer")
         .Produces<CustomerDTO>((int)HttpStatusCode.OK)
         .Produces<ValidationProblemDetails>((int)HttpStatusCode.BadRequest);
