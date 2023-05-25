@@ -20,6 +20,8 @@ public static class ServicesConfiguration
 
     public static void AddWeb(this IServiceCollection services, IWebHostEnvironment environment)
     {
+        services.AddHttpContextAccessor();
+
         if (environment.IsDevelopment())
         {
             services.AddEndpointsApiExplorer();
