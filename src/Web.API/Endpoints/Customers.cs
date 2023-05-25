@@ -8,9 +8,11 @@ namespace Web.API.Endpoints;
 
 public class Customers : CarterModule
 {
-    public Customers() : base("/customers")
+    private const string MODULE_NAME = nameof(Customers);
+
+    public Customers() : base($"/{MODULE_NAME}")
     {
-        WithTags(nameof(Customers));
+        WithTags(MODULE_NAME);
     }
 
     public override void AddRoutes(IEndpointRouteBuilder app)
